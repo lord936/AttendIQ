@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+input, select {
+    padding: 8px;
+    width: 95%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #2d89ef;
+    color: white;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+}
+
+.safe-badge { background-color: #28a745; }
+.warning-badge { background-color: #ffc107; color: black; }
+.critical-badge { background-color: #dc3545; }
