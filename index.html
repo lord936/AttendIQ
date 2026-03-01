@@ -1,68 +1,111 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AttendIQ Cloud</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 </head>
 <body>
 
+<div class="topbar">
+  <div class="brand">AttendIQ</div>
+  <button id="themeToggle" onclick="toggleTheme()">Toggle Theme</button>
+  </div>
+<div class="page">
 <h1>AttendIQ Cloud</h1>
+<div id="status"></div>
 
-<div class="card">
-    <h3>Authentication</h3>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-    <button onclick="signUp()">Sign Up</button>
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="googleSignIn()">Google</button>
-    <button onclick="logout()">Logout</button>
+<div class="tabs">
+  <button class="tab active" onclick="navTo('dashboard')">Dashboard</button>
+  <button class="tab" onclick="navTo('timetable')">Timetable</button>
+  <button class="tab" onclick="navTo('settings')">Settings</button>
 </div>
 
-<div class="card">
-    <h3>Minimum Required Attendance (%)</h3>
-    <input type="number" id="minAttendance" value="75">
+<section id="screen-dashboard" class="screen">
+  <div class="card">
+      <h3>Add Subject</h3>
+      <input type="text" id="subjectName" placeholder="Subject Name"><br><br>
+      <input type="number" id="attended" placeholder="Classes Attended"><br><br>
+      <input type="number" id="total" placeholder="Total Classes"><br><br>
+      <button id="addSubjectBtn" onclick="addSubject()">Add Subject</button>
+  </div>
+  <div id="subjectsContainer"></div>
+</section>
+
+<section id="screen-timetable" class="screen hidden">
+  <div class="card">
+      <h3>Add Weekly Timetable</h3>
+      <input type="text" id="ttSubject" placeholder="Subject Name"><br><br>
+      <select id="ttDay">
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+          <option>Saturday</option>
+          <option>Sunday</option>
+      </select><br><br>
+      Start Time:<br>
+      <input type="time" id="ttStartTime"><br><br>
+      End Time:<br>
+      <input type="time" id="ttEndTime"><br><br>
+      <button id="addTimetableBtn" onclick="addTimetable()">Add Timetable</button>
+  </div>
+  <div class="card">
+      <h3>Import From Photo</h3>
+      <input type="file" id="ocrImage" accept="image/*"><br><br>
+      <button id="ocrExtractBtn" onclick="extractTimetableFromImage()">Extract</button>
+      <div id="ocrProgress"></div>
+      <div id="ocrPreview"></div>
+      <button id="ocrSaveBtn" onclick="saveExtractedTimetable()" disabled>Save Extracted</button>
+  </div>
+  <div id="timetableContainer"></div>
+</section>
+
+<section id="screen-settings" class="screen hidden">
+  <div class="card">
+      <h3>Authentication</h3>
+      <input type="email" id="email" placeholder="Email"><br><br>
+      <input type="password" id="password" placeholder="Password"><br><br>
+      <button onclick="signUp()">Sign Up</button>
+      <button onclick="signIn()">Sign In</button>
+      <button onclick="googleSignIn()">Google</button>
+      <button onclick="logout()">Logout</button>
+      <button id="resetBtn" onclick="resetData()">Reset Data</button>
+  </div>
+  <div class="card">
+      <h3>Minimum Required Attendance (%)</h3>
+      <input type="number" id="minAttendance" value="75">
+  </div>
+  <div class="card">
+      <h3>Notifications</h3>
+      <p>Enable reminders 15 min before class and a prompt 5 min after start.</p>
+      <button onclick="enableNotifications()">Enable Notifications</button>
+  </div>
+</section>
+ </div>
+
+<div id="attendancePrompt" class="modal hidden">
+  <div class="modal-content">
+    <h3 id="promptTitle"></h3>
+    <div class="actions">
+      <button id="promptPresentBtn" onclick="promptPresent()">Present</button>
+      <button id="promptAbsentBtn" onclick="promptAbsent()">Absent</button>
+      <button onclick="closePrompt()">Close</button>
+
+    </div>
+  </div>
+  <div class="modal-backdrop" onclick="closePrompt()"></div>
 </div>
 
-<div class="card">
-    <h3>Add Subject</h3>
-    <input type="text" id="subjectName" placeholder="Subject Name"><br><br>
-    <input type="number" id="attended" placeholder="Classes Attended"><br><br>
-    <input type="number" id="total" placeholder="Total Classes"><br><br>
-    <button onclick="addSubject()">Add Subject</button>
-</div>
-
-<div class="card">
-    <h3>Add Weekly Timetable</h3>
-    <input type="text" id="ttSubject" placeholder="Subject Name"><br><br>
-
-    <select id="ttDay">
-        <option>Monday</option>
-        <option>Tuesday</option>
-        <option>Wednesday</option>
-        <option>Thursday</option>
-        <option>Friday</option>
-        <option>Saturday</option>
-        <option>Sunday</option>
-    </select><br><br>
-
-    Start Time:<br>
-    <input type="time" id="ttStartTime"><br><br>
-
-    End Time:<br>
-    <input type="time" id="ttEndTime"><br><br>
-
-    <button onclick="addTimetable()">Add Timetable</button>
-</div>
-
-<div id="subjectsContainer"></div>
-
-<!-- Firebase SDK (COMPAT VERSION for easier usage) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<script src="firebase.js"></script>
-<script src="script.js"></script>
-
+<script type="module" src="script.js"></script>
 </body>
 </html>
